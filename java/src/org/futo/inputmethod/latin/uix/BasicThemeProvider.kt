@@ -92,6 +92,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = radius
+            //setStroke(5, Color.Cyan.toArgb())
             setColor(color)
         }
     }
@@ -269,7 +270,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
 
         keyboardBackground = coloredRectangle(0x00000000)
 
-        val keyCornerRadius = 9.dp
+        val keyCornerRadius = 3.dp
 
         val spaceCornerRadius = if(keyBorders) {
             keyCornerRadius
@@ -286,12 +287,12 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
                     backgroundDrawablePressed = coloredRoundedRectangle(colorScheme.outline.copy(alpha = 0.6f).toArgb(), dp(128.dp)),
                     foregroundColorPressed    = colorScheme.onSurface.toArgb()
                 )
-            } else {
+            } else { // ENTER BUTTON
                 VisualStyleDescriptor(
-                    backgroundDrawable = coloredRoundedRectangle(colorScheme.primary.toArgb(), dp(128.dp)),
+                    backgroundDrawable = coloredRoundedRectangle(colorScheme.primary.toArgb(), dp(3.dp)),
                     foregroundColor    = colorScheme.onPrimary.toArgb(),
 
-                    backgroundDrawablePressed = coloredRoundedRectangle(colorScheme.secondaryContainer.toArgb(), dp(128.dp)),
+                    backgroundDrawablePressed = coloredRoundedRectangle(colorScheme.secondaryContainer.toArgb(), dp(3.dp)),
                     foregroundColorPressed    = colorScheme.onSecondaryContainer.toArgb()
                 )
             },

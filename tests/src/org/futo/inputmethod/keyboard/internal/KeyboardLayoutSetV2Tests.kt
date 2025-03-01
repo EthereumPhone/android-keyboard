@@ -5,7 +5,6 @@ import android.test.AndroidTestCase
 import android.view.inputmethod.EditorInfo
 import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.runBlocking
-import org.futo.inputmethod.latin.uix.KeyboardHeightMultiplierSetting
 import org.futo.inputmethod.latin.uix.dataStore
 import org.futo.inputmethod.v2keyboard.KeyboardLayoutSetV2
 import org.futo.inputmethod.v2keyboard.KeyboardLayoutSetV2Params
@@ -25,17 +24,13 @@ class KeyboardLayoutSetV2Tests : AndroidTestCase() {
     )
 
     private fun setHeight(to: Float) {
-        runBlocking {
-            context.dataStore.edit { it[KeyboardHeightMultiplierSetting.key] = to }
-        }
-        KeyboardLayoutSetV2.onKeyboardThemeChanged(context)
+        //runBlocking { context.dataStore.edit { it[KeyboardHeightMultiplierSetting.key] = to } }
+        //KeyboardLayoutSetV2.onKeyboardThemeChanged(context)
     }
 
     private fun resetHeight() {
-        runBlocking {
-            context.dataStore.edit { it.remove(KeyboardHeightMultiplierSetting.key) }
-        }
-        KeyboardLayoutSetV2.onKeyboardThemeChanged(context)
+        //runBlocking { context.dataStore.edit { it.remove(KeyboardHeightMultiplierSetting.key) } }
+        //KeyboardLayoutSetV2.onKeyboardThemeChanged(context)
     }
 
     private fun getActualHeight(layoutSet: KeyboardLayoutSetV2): Int {

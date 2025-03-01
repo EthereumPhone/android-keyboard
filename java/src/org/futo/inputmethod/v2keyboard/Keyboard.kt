@@ -47,7 +47,7 @@ data class Row(
     /**
      * (optional) The height multiplier for this row
      */
-    val rowHeight: Double = if(numbers == null) { 1.0 } else { NumberRowHeight },
+    val rowHeight: Double = if(numbers == null) { 1.5 } else { NumberRowHeight },
 
     /**
      * (optional) Whether or not this row is splittable. Enabled for letter rows by default.

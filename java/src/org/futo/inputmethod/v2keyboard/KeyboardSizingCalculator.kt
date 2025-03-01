@@ -199,9 +199,12 @@ fun getDefaultSettingForKind(kind: KeyboardSizeSettingKind, context: Context): S
     val density = metrics.density.toFloat()
     val minDimDp = (minOf(metrics.widthPixels, metrics.heightPixels).toFloat() / density).dp
 
+    /*
     val oldHeightMultiplier = context.getSettingBlocking(OldKeyboardHeightMultiplierSetting) + run {
         (oldBottomOffset.value * density) / metrics.heightPixels.toFloat()
     }
+     */
+    val oldHeightMultiplier = 0.5f
 
     val extraSidePadding = when {
         minDimDp > 600.dp -> 24.dp

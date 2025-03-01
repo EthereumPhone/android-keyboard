@@ -82,7 +82,7 @@ data class KeyboardLayoutSetV2Params(
     val editorInfo: EditorInfo?,
     val numberRow: Boolean,
     val arrowRow: Boolean,
-    val gap: Float = 4.0f,
+    val gap: Float = 1.0f,
     val bottomActionKey: Int?,
     val longPressKeySettings: LongPressKeySettings? = null
 )
@@ -291,10 +291,11 @@ Layout: $layoutName
             mId = keyboardId
             mTextsSet.setLocale(keyboardId.locale, context)
         }
+        Log.d("Test", "my test")
 
         val layoutParams = LayoutParams(
             size = params.computedSize,
-            gap = params.gap.dp,
+            gap = 3.dp, //params.gap.dp
             standardRowHeight = singularRowHeight,
             element = element
         )

@@ -23,6 +23,7 @@ import org.futo.inputmethod.latin.uix.theme.presets.SteelGray
 import org.futo.inputmethod.latin.uix.theme.presets.Sunflower
 import org.futo.inputmethod.latin.uix.theme.presets.VoiceInputTheme
 import org.futo.inputmethod.latin.uix.theme.presets.DevTheme
+import org.futo.inputmethod.latin.uix.theme.presets.dGen1RedTheme
 import org.futo.inputmethod.latin.uix.theme.presets.dGen1Theme
 
 data class ThemeOption(
@@ -58,7 +59,8 @@ val ThemeOptions = mapOf(
     VoiceInputTheme.key to VoiceInputTheme,
     HotDog.key to HotDog,
     DevTheme.key to DevTheme,
-    dGen1Theme.key to dGen1Theme
+    dGen1Theme.key to dGen1Theme,
+    dGen1RedTheme.key to dGen1RedTheme
 )
 
 val ThemeOptionKeys = ThemeOptions.keys

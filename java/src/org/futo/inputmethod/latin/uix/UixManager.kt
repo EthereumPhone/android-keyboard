@@ -151,7 +151,7 @@ val LocalFoldingState = compositionLocalOf<FoldingOptions> {
 @Composable
 fun navBarHeight(): Dp = with(LocalDensity.current) {
     if(SupportsNavbarExtension) {
-        WindowInsets.systemBars.getBottom(this).toDp()
+        (WindowInsets.systemBars.getBottom(this)*0.75).toInt().toDp() // push keyboard down
     } else {
         0.dp
     }

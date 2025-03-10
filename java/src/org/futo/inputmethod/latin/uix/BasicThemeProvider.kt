@@ -92,7 +92,15 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = radius
-            //setStroke(5, Color.Cyan.toArgb())
+            setColor(color)
+        }
+    }
+
+    private fun coloredStrokeRoundRectangle(@ColorInt color: Int, radius: Float): GradientDrawable {
+        return GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = radius
+            setStroke(2, Color.Red.toArgb())
             setColor(color)
         }
     }
@@ -116,8 +124,10 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         addState(stateSet, drawable)
     }
 
-    private fun makeVisualStyle(background: Int, foreground: Int, highlight: Int, roundedness: Dp): VisualStyleDescriptor {
-        val bg = coloredRoundedRectangle(background, dp(roundedness))
+    private fun makeVisualStyle(background: Int, foreground: Int, highlight: Int, roundedness: Dp, useStroke: Boolean = true) : VisualStyleDescriptor {
+
+
+        val bg = coloredStrokeRoundRectangle(background, dp(roundedness))
         val bgHighlight = coloredRoundedRectangle(highlight, dp(roundedness))
         return VisualStyleDescriptor(
             backgroundDrawable = bg,
@@ -126,6 +136,8 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
             backgroundDrawablePressed = LayerDrawable(arrayOf(bg, bgHighlight))
         )
     }
+
+
 
     val expertMode: Boolean
     val showKeyHints: Boolean
@@ -273,10 +285,12 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         val keyCornerRadius = 3.dp
 
         val spaceCornerRadius = if(keyBorders) {
-            keyCornerRadius
+            keyCornerRadius //keyCornerRadius
         } else {
-            48.dp
+            3.dp
         }
+
+        //TODO: change to handle dGen1 keyboard better
 
         keyStyles = mapOf(
             KeyVisualStyle.Action to if(expertMode) {
@@ -289,7 +303,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
                 )
             } else { // ENTER BUTTON
                 VisualStyleDescriptor(
-                    backgroundDrawable = coloredRoundedRectangle(colorScheme.primary.toArgb(), dp(3.dp)),
+                    backgroundDrawable = coloredStrokeRoundRectangle(colorScheme.primary.toArgb(), dp(3.dp)),
                     foregroundColor    = colorScheme.onPrimary.toArgb(),
 
                     backgroundDrawablePressed = coloredRoundedRectangle(colorScheme.secondaryContainer.toArgb(), dp(3.dp)),
@@ -297,6 +311,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
                 )
             },
 
+            // all other keys
             KeyVisualStyle.Normal to if(keyBorders) {
                 makeVisualStyle(
                     keyColor,

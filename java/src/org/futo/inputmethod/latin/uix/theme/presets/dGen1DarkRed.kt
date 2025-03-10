@@ -10,7 +10,7 @@ import org.futo.inputmethod.latin.uix.theme.selector.ThemePreview
 
 private val darkScheme = extendedDarkColorScheme(
     primary= Color(0xFFE20000),
-    onPrimary= Color(0xFF474039),
+    onPrimary= Color.Black,
     primaryContainer= Color(0xFF474239),
     onPrimaryContainer= Color(0xFFFFF4E0),
     secondary= Color(0xFFFFF8F0),
@@ -34,10 +34,10 @@ private val darkScheme = extendedDarkColorScheme(
     shadow= Color.Transparent,
     keyboardSurface= Color.Black,
     keyboardSurfaceDim= Color(0xFF24353B),
-    keyboardContainer= Color(0xFF24353B), // individual key color
-    keyboardContainerVariant= Color(0xFF24353B),
-    onKeyboardContainer= Color(0xFFFFECE5),
-    keyboardPress= Color(0xFF585B5E),
+    keyboardContainer= Color.Transparent, // individual key color + spacebar
+    keyboardContainerVariant= Color.Transparent,
+    onKeyboardContainer= Color(0xFFE20000), // text color
+    keyboardPress= Color.Transparent,
     keyboardFade0= Color(0xFF2E2E2E),
     keyboardFade1= Color(0xFF2E2E2E),
     primaryTransparent= Color(0xFFF0DFD3).copy(alpha = 0.3f),

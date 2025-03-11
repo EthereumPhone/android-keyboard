@@ -6,4 +6,5 @@
 	url = https://gitlab.futo.org/keyboard/voice-input-models.git
 [submodule "java/assets/layouts"]
 	path = java/assets/layouts
-	url = https://github.com/futo-org/futo-keyboard-layouts.git
+	url = https://github.com/EthereumPhone/futo-keyboard-layouts.git
+	branch = ethoslayout

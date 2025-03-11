@@ -106,7 +106,7 @@ val vibrationDurationSetting = SettingsKey(
 
 val ActionBarDisplayedSetting = SettingsKey(
     booleanPreferencesKey("enable_action_bar"),
-    true
+    false // dgen1 default hide action bar
 )
 
 fun NavGraphBuilder.addTypingNavigation(

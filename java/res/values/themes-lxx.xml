@@ -37,6 +37,7 @@
         <item name="keyLabelOffCenterRatio">-120%</item>
         <item name="keyHintLabelRatio">@fraction/config_key_hint_label_ratio_lxx</item>
         <item name="keyHintLabelOffCenterRatio">400%</item>
+        <item name="keyHintLabelVerticalAdjustment">30%</item>
         <item name="keyLabelFlags" />
         <item name="spacebarIconWidthRatio">0.9</item>
         <!-- No popup hint letter -->

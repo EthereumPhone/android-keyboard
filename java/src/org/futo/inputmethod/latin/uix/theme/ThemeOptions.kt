@@ -67,12 +67,15 @@ val ThemeOptionKeys = ThemeOptions.keys
 
 fun defaultThemeOption(context: Context): ThemeOption =
     if(context.resources.getBoolean(R.bool.use_dev_styling)) {
-        DevTheme
+        //DevTheme
+        dGen1RedTheme
     } else {
         if(DynamicSystemTheme.available(context)) {
-            DynamicSystemTheme
+            //DynamicSystemTheme
+            dGen1RedTheme
         } else {
-            DefaultDarkScheme
+            //DefaultDarkScheme
+            dGen1RedTheme
         }
     }
 

@@ -16,6 +16,7 @@
 
 package org.futo.inputmethod.keyboard.internal;
 
+import android.content.Context;
 import android.graphics.Typeface;
 
 import org.futo.inputmethod.latin.utils.ResourceUtils;
@@ -24,6 +25,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public final class KeyDrawParams {
+    @Nullable
+    public Context mContext;
+
     @Nonnull
     public Typeface mTypeface = Typeface.DEFAULT;
 
@@ -55,7 +59,12 @@ public final class KeyDrawParams {
 
     public KeyDrawParams() {}
 
+    public KeyDrawParams(@Nullable final Context context) {
+        mContext = context;
+    }
+
     private KeyDrawParams(@Nonnull final KeyDrawParams copyFrom) {
+        mContext = copyFrom.mContext;
         mTypeface = copyFrom.mTypeface;
 
         mLetterSize = copyFrom.mLetterSize;

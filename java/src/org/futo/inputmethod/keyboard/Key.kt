@@ -302,14 +302,12 @@ data class Key(
                 && (labelFlags and KeyConsts.LABEL_FLAGS_SHIFTED_LETTER_ACTIVATED) == 0)
 
     fun selectTypeface(params: KeyDrawParams): Typeface {
-        return when (labelFlags and KeyConsts.LABEL_FLAGS_FONT_MASK) {
-            KeyConsts.LABEL_FLAGS_FONT_NORMAL -> Typeface.DEFAULT
-            KeyConsts.LABEL_FLAGS_FONT_MONO_SPACE -> Typeface.MONOSPACE
-            KeyConsts.LABEL_FLAGS_FONT_DEFAULT ->             // The type-face is specified by keyTypeface attribute.
-                params.mTypeface
-
-            else ->
-                params.mTypeface
+        // Always use Space Mono font regardless of the font flags
+        return if (params.mContext != null) {
+            org.futo.inputmethod.latin.utils.CustomTypefaceUtil.getSpaceMonoTypeface(params.mContext, Typeface.NORMAL)
+        } else {
+            // Fallback to normal typeface if context is not available
+            Typeface.DEFAULT
         }
     }
 

@@ -104,7 +104,7 @@ public class KeyboardView extends View {
     @Nullable
     private Keyboard mKeyboard;
     @Nonnull
-    private final KeyDrawParams mKeyDrawParams = new KeyDrawParams();
+    private final KeyDrawParams mKeyDrawParams = new KeyDrawParams(getContext());
 
     // Drawing
     /** True if all keys should be drawn */

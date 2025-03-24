@@ -304,7 +304,7 @@ data class Key(
     fun selectTypeface(params: KeyDrawParams): Typeface {
         // Always use Space Mono font regardless of the font flags
         return if (params.mContext != null) {
-            org.futo.inputmethod.latin.utils.CustomTypefaceUtil.getSpaceMonoTypeface(params.mContext, Typeface.NORMAL)
+            org.futo.inputmethod.latin.utils.CustomTypefaceUtil.getSpaceMonoTypeface(params.mContext, Typeface.BOLD)
         } else {
             // Fallback to normal typeface if context is not available
             Typeface.DEFAULT

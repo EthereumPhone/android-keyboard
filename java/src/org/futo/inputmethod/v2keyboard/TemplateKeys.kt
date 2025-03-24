@@ -58,7 +58,14 @@ val TemplateDeleteKey = BaseKey(
 
 val TemplateSymbolsKey = BaseKey(
     spec = "!text/keylabel_to_symbol|!code/key_switch_alpha_symbol",
-    attributes = FunctionalAttributes
+    attributes = KeyAttributes(
+        width = KeyWidth.Regular,
+        style = KeyVisualStyle.Functional,
+        anchored = true,
+        showPopup = false,
+        moreKeyMode = MoreKeyMode.OnlyExplicit,
+        labelFlags = LabelFlags(followKeyLetterRatio = false, followKeyLargeLetterRatio = false, followKeyLabelRatio = false)
+    )
 )
 
 val TemplateAlphabetKey = BaseKey(

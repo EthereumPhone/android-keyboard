@@ -295,7 +295,7 @@ Layout: $layoutName
 
         val layoutParams = LayoutParams(
             size = params.computedSize,
-            gap = 3.dp, //params.gap.dp
+            gap = 5.dp, //params.gap.dp //TODO make this prettier
             standardRowHeight = singularRowHeight,
             element = element
         )

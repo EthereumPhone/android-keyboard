@@ -111,7 +111,7 @@ data class LayoutEngine(
     val layoutParams: LayoutParams
 ) {
     val horizontalGap = layoutParams.gap
-    val verticalGap = layoutParams.gap //
+    val verticalGap = layoutParams.gap // TODO: should
 
     private val rows = run {
         val filteredRows = keyboard.effectiveRows.filter {

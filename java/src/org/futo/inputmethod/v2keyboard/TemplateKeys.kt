@@ -64,7 +64,7 @@ val TemplateSymbolsKey = BaseKey(
         anchored = true,
         showPopup = false,
         moreKeyMode = MoreKeyMode.OnlyExplicit,
-        labelFlags = LabelFlags(followKeyLetterRatio = false, followKeyLargeLetterRatio = false, followKeyLabelRatio = false)
+        labelFlags = LabelFlags(followKeyLetterRatio = true)
     )
 )
 

@@ -159,9 +159,7 @@ public class SettingsValues {
                 ));
         mShowsActionKey = mActionKeyId != -1;
         mIsNumberRowEnabledByUser = prefs.getBoolean(Settings.PREF_ENABLE_NUMBER_ROW, false);
-        mIsNumberRowEnabled = mIsNumberRowEnabledByUser
-                || (inputAttributes.mIsPasswordField && !inputAttributes.mIsNumericalPasswordField)
-                || inputAttributes.mIsEmailField;
+        mIsNumberRowEnabled = mIsNumberRowEnabledByUser;
         mIsArrowRowEnabled = prefs.getBoolean(Settings.PREF_ENABLE_ARROW_ROW, false);
         mUseDictionaryKeyBoosting = prefs.getBoolean(Settings.PREF_USE_DICT_KEY_BOOSTING, true);
         mUseContactsDict = prefs.getBoolean(Settings.PREF_KEY_USE_CONTACTS_DICT, true);

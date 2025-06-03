@@ -204,7 +204,7 @@ fun getDefaultSettingForKind(kind: KeyboardSizeSettingKind, context: Context): S
         (oldBottomOffset.value * density) / metrics.heightPixels.toFloat()
     }
      */
-    val oldHeightMultiplier = 0.7f
+    val oldHeightMultiplier = 0.6f
 
     val extraSidePadding = when {
         minDimDp > 600.dp -> 24.dp

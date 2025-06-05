@@ -131,7 +131,7 @@ public final class Settings implements SharedPreferences.OnSharedPreferenceChang
     public static final int SPACES_MODE_SUGGESTIONS = 1; // Use antiphantom for suggestion, none for punctuation
     public static final int SPACES_MODE_ALL = 2; // Use antiphantom for all
 
-    public static final int DEFAULT_ALT_SPACES_MODE = SPACES_MODE_ALL;
+    public static final int DEFAULT_ALT_SPACES_MODE = SPACES_MODE_LEGACY;
 
     // Emoji
     public static final String PREF_EMOJI_RECENT_KEYS = "emoji_recent_keys";

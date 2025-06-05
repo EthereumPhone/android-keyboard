@@ -8,3 +8,6 @@
 	path = java/assets/layouts
 	url = https://github.com/EthereumPhone/futo-keyboard-layouts.git
 	branch = ethoslayout
+[submodule "latinime"]
+	path = latinime
+	url = https://github.com/EthereumPhone/latinime.git

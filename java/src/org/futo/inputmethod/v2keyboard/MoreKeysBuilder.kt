@@ -103,7 +103,7 @@ data class MoreKeysBuilder(
             LongPressKey.QuickActions -> mode.autoSymFromCoord
 
             // Numbers added to top row requires the number row being inactive
-            LongPressKey.Numbers -> (mode.autoNumFromCoord && !isNumberRowActive)
+            LongPressKey.Numbers -> mode.autoNumFromCoord
 
             // Symbols for top row requires number row being active (it replaces the number long-press keys)
             LongPressKey.Symbols -> (mode.autoSymFromCoord && (coordinate.regularRow > 0 || isNumberRowActive))

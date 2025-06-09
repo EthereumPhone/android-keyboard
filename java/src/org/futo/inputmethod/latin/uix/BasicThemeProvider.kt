@@ -100,7 +100,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         return GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
             cornerRadius = radius
-            setStroke(2, Color.Red.toArgb())
+            setStroke(2, colorScheme.outline.toArgb())
             setColor(color)
         }
     }

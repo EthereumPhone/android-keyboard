@@ -266,6 +266,9 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
 
         updateNavigationBarVisibility()
         uixManager.onColorSchemeChanged()
+
+        latinIMELegacy.updateTheme()
+        invalidateKeyboard()
     }
 
     override fun getDrawableProvider(): DynamicThemeProvider {
@@ -359,6 +362,71 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
     }
 
     private var unlockReceiver = UnlockedBroadcastReceiver { onDeviceUnlocked() }
+
+    private var accentColor: Int = android.graphics.Color.RED
+
+    private fun updateAccentColor() {
+        accentColor = try {
+            android.provider.Settings.Secure.getInt(contentResolver, "systemui_accent_color")
+        } catch (_: android.provider.Settings.SettingNotFoundException) {
+            android.graphics.Color.RED
+        }
+        // Apply to existing UI tree
+        applyAccentColorToUi()
+
+        // Rebuild color scheme and redraw keyboard so key glyphs etc. use accent
+        val accentCompose = androidx.compose.ui.graphics.Color(accentColor)
+
+        val newColorScheme = KeyboardColorScheme(
+            base = activeColorScheme.base.copy(
+                primary = accentCompose,
+                primaryContainer = accentCompose,
+                secondary = accentCompose,
+                secondaryContainer = accentCompose,
+                outline = accentCompose,
+                outlineVariant = accentCompose
+            ),
+            extended = activeColorScheme.extended.copy(
+                primaryTransparent = accentCompose.copy(alpha = 0.3f),
+                onKeyboardContainer = accentCompose,
+                keyboardPress = accentCompose.copy(alpha = 0.7f)
+            )
+        )
+
+        updateDrawableProvider(newColorScheme)
+        invalidateKeyboard()
+    }
+
+    private fun applyAccentColorToUi() {
+        composeView?.rootView?.let { root ->
+            tintViewHierarchy(root, accentColor)
+        }
+    }
+
+    private fun tintViewHierarchy(view: View, color: Int) {
+        when (view) {
+            is android.widget.TextView -> {
+                view.setTextColor(color)
+                view.setShadowLayer(view.getShadowRadius(), view.getShadowDx(), view.getShadowDy(), color)
+                view.compoundDrawablesRelative?.forEach { it?.setTint(color) }
+            }
+            is android.view.ViewGroup -> {
+                for (i in 0 until view.childCount) {
+                    tintViewHierarchy(view.getChildAt(i), color)
+                }
+            }
+            // Handle SwipeRefreshLayout via reflection to avoid direct dependency
+            else -> {
+                if (view.javaClass.name == "androidx.swiperefreshlayout.widget.SwipeRefreshLayout") {
+                    try {
+                        val method = view.javaClass.getMethod("setColorSchemeColors", IntArray::class.java)
+                        method.invoke(view, intArrayOf(color))
+                    } catch (_: Exception) { /* Ignore */ }
+                }
+            }
+        }
+        view.background?.mutate()?.setTint(color)
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -474,6 +542,8 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
                 invalidateKeyboard(refreshSettings = true)
             }
         }
+
+        updateAccentColor()
     }
 
     override fun onDestroy() {
@@ -621,6 +691,7 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
         latinIMELegacy.onWindowShown()
 
         updateColorsIfDynamicChanged()
+        updateAccentColor()
     }
 
     override fun onWindowHidden() {

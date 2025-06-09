@@ -263,7 +263,7 @@ final class GestureTrailDrawingPoints {
         for (int i = startIndex; i < endIndex; i++) {
             final int pointType = pointTypes[i];
             if (pointType == POINT_TYPE_INTERPOLATED) {
-                paint.setColor(Color.RED);
+                paint.setColor(Color.MAGENTA);
             } else if (pointType == POINT_TYPE_SAMPLED) {
                 paint.setColor(0xFFA000FF);
             } else {

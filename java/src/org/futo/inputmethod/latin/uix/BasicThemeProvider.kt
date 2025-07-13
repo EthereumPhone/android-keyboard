@@ -11,6 +11,7 @@ import androidx.annotation.ColorInt
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
@@ -185,6 +186,9 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         val onBackgroundHalf = colorScheme.onBackground.copy(alpha = 0.5f).toArgb()
         val onBackgroundThird = colorScheme.onBackground.copy(alpha = 0.33f).toArgb()
 
+        val primaryLuminance = colorScheme.primary.convert(ColorSpaces.CieLab).component1()
+        val darkerPrimary = colorScheme.primary.setLuminance(primaryLuminance * 0.5f).toArgb()
+
         val transparent = Color.Transparent.toArgb()
         keyboardColor = colorScheme.keyboardSurface.toArgb()
         actionBarColor = if(keyBorders) {
@@ -329,10 +333,10 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
             },
 
             KeyVisualStyle.MoreKey to VisualStyleDescriptor(
-                backgroundDrawable = coloredRoundedRectangle(colorScheme.keyboardPress.toArgb(), dp(keyCornerRadius)),
+                backgroundDrawable = coloredRectangle(darkerPrimary),
                 foregroundColor = colorScheme.onKeyboardContainer.toArgb(),
 
-                backgroundDrawablePressed = coloredRoundedRectangle(primary, dp(keyCornerRadius)),
+                backgroundDrawablePressed = coloredRectangle(primary),
                 foregroundColorPressed = onPrimary
             ),
 
@@ -428,7 +432,7 @@ class BasicThemeProvider(val context: Context, val colorScheme: KeyboardColorSch
         colors[R.styleable.Keyboard_Key_keyPreviewTextColor] = colorScheme.onKeyboardContainer.toArgb()
 
         moreKeysTextColor = colorScheme.onKeyboardContainer.toArgb()
-        moreKeysKeyboardBackground = coloredRoundedRectangle(colorScheme.keyboardPress.toArgb(), dp(keyCornerRadius))
+        moreKeysKeyboardBackground = coloredRoundedRectangle(Color.Transparent.toArgb(), dp(keyCornerRadius))
 
         assert(icons.keys == KeyboardIconsSet.validIcons) {
             "Icons differ. Missing: ${KeyboardIconsSet.validIcons - icons.keys}, extraneous: ${icons.keys - KeyboardIconsSet.validIcons}"

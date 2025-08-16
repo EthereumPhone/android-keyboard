@@ -72,6 +72,13 @@ public final class SystemBroadcastReceiver extends BroadcastReceiver {
         // There is no good reason to keep the process alive if this IME isn't a current IME.
         final InputMethodManager imm = (InputMethodManager)
                 context.getSystemService(Context.INPUT_METHOD_SERVICE);
+        
+        // Don't kill the process on BOOT_COMPLETED as the IME service might not be fully initialized
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intentAction)) {
+            Log.i(TAG, "Skipping process kill check on boot completed");
+            return;
+        }
+        
         // Called to check whether this IME has been triggered by the current user or not
         final boolean isInputMethodManagerValidForUserOfThisProcess =
                 !imm.getInputMethodList().isEmpty();

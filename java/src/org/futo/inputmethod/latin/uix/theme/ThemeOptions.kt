@@ -23,6 +23,7 @@ import org.futo.inputmethod.latin.uix.theme.presets.SteelGray
 import org.futo.inputmethod.latin.uix.theme.presets.Sunflower
 import org.futo.inputmethod.latin.uix.theme.presets.VoiceInputTheme
 import org.futo.inputmethod.latin.uix.theme.presets.DevTheme
+import org.futo.inputmethod.latin.uix.theme.presets.SystemAccentTheme
 import org.futo.inputmethod.latin.uix.theme.presets.dGen1RedTheme
 import org.futo.inputmethod.latin.uix.theme.presets.dGen1Theme
 
@@ -35,6 +36,7 @@ data class ThemeOption(
 )
 
 val ThemeOptions = mapOf(
+    SystemAccentTheme.key to SystemAccentTheme,
     DefaultDarkScheme.key to DefaultDarkScheme,
     DefaultLightScheme.key to DefaultLightScheme,
 
@@ -65,19 +67,7 @@ val ThemeOptions = mapOf(
 
 val ThemeOptionKeys = ThemeOptions.keys
 
-fun defaultThemeOption(context: Context): ThemeOption =
-    if(context.resources.getBoolean(R.bool.use_dev_styling)) {
-        //DevTheme
-        dGen1RedTheme
-    } else {
-        if(DynamicSystemTheme.available(context)) {
-            //DynamicSystemTheme
-            dGen1RedTheme
-        } else {
-            //DefaultDarkScheme
-            dGen1RedTheme
-        }
-    }
+fun defaultThemeOption(context: Context): ThemeOption = SystemAccentTheme
 
 fun ThemeOption?.orDefault(context: Context): ThemeOption {
     val themeOptionFromSettings = this

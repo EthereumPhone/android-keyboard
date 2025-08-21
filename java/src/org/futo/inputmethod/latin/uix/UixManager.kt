@@ -1074,7 +1074,7 @@ class UixManager(private val latinIME: LatinIME) {
                 currentNotice.value = object : ImportantNotice {
                     @Composable
                     override fun getText(): String {
-                        return "Please tap to check for updates, or check in settings"
+                        return ""
                     }
 
                     override fun onDismiss(context: Context) {

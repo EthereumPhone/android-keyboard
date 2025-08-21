@@ -30,8 +30,7 @@ import org.futo.inputmethod.latin.uix.settings.NavigationItemStyle
 import org.futo.inputmethod.latin.uix.settings.ScreenTitle
 import org.futo.inputmethod.latin.uix.settings.useDataStoreValue
 import org.futo.inputmethod.latin.uix.theme.Typography
-import org.futo.inputmethod.updates.ConditionalMigrateUpdateNotice
-import org.futo.inputmethod.updates.ConditionalUpdate
+
 
 @Preview(showBackground = true)
 @Composable
@@ -52,8 +51,6 @@ fun HomeScreen(navController: NavHostController = rememberNavController()) {
             Spacer(modifier = Modifier.height(24.dp))
             ScreenTitle(stringResource(R.string.english_ime_settings))
 
-            ConditionalMigrateUpdateNotice()
-            ConditionalUpdate(navController)
             ConditionalUnpaidNoticeWithNav(navController)
 
             NavigationItem(

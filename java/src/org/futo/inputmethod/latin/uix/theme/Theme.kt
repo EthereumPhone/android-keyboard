@@ -46,10 +46,10 @@ fun applyWindowColors(window: Window, @ColorInt color: Int, statusBar: Boolean) 
 
 @Composable
 fun StatusBarColorSetter() {
-    val backgroundColor = MaterialTheme.colorScheme.background
+    val backgroundColor = android.graphics.Color.BLACK
     val context = LocalContext.current
     LaunchedEffect(backgroundColor) {
-        applyWindowColors((context as Activity).window, backgroundColor.toArgb(), statusBar = false)
+        applyWindowColors((context as Activity).window, backgroundColor, statusBar = true)
     }
 }
 

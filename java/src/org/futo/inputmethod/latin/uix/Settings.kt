@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import okio.buffer
 import okio.sink
@@ -88,10 +87,11 @@ private object DefaultDataStore : DataStore<Preferences> {
 }
 
 // Set and used after first unlock (direct boot)
+@Volatile
 private var unlockedDataStore: DataStore<Preferences>? = null
 
 // To prevent two threads trying to create a datastore at once
-private val dataStoreCreationMutex = Mutex()
+private val dataStoreLock = Any()
 
 fun Context.getPreferencesDataStoreFile(): File =
     applicationContext.preferencesDataStoreFile("settings")
@@ -195,12 +195,17 @@ private fun migrateCorruptedDataStore(context: Context) {
 @OptIn(DelicateCoroutinesApi::class)
 fun forceUnlockDatastore(context: Context): DataStore<Preferences>? {
     val userManager = context.getSystemService(Context.USER_SERVICE) as UserManager
-    return if (userManager.isUserUnlocked && dataStoreCreationMutex.tryLock()) {
-        try {
+    if (!userManager.isUserUnlocked) return null
+
+    // Fast path: already created (volatile read)
+    unlockedDataStore?.let { return it }
+
+    return synchronized(dataStoreLock) {
+        // Double-check after acquiring lock
+        unlockedDataStore ?: try {
             // Migrate corrupted DataStore file before creating the DataStore
             migrateCorruptedDataStore(context)
 
-            // The device has been unlocked
             val newDataStore = PreferenceDataStoreFactory.create(
                 corruptionHandler = ReplaceFileCorruptionHandler {
                     Log.e("SettingsBackup", "The settings file is corrupted! Attempting to restore...")
@@ -228,11 +233,11 @@ fun forceUnlockDatastore(context: Context): DataStore<Preferences>? {
             }
 
             newDataStore
-        } finally {
-            dataStoreCreationMutex.unlock()
+        } catch (e: IllegalStateException) {
+            // Safety net: if a DataStore already exists for this file (e.g. from a
+            // previous instance that wasn't properly cleaned up), don't crash.
+            null
         }
-    } else {
-        null
     }
 }
 

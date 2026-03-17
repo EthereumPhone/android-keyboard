@@ -110,6 +110,8 @@ import org.futo.inputmethod.latin.uix.actions.ActionRegistry
 import org.futo.inputmethod.latin.uix.actions.AllActions
 import org.futo.inputmethod.latin.uix.actions.EmojiAction
 import org.futo.inputmethod.latin.uix.actions.KeyboardModeAction
+import org.futo.inputmethod.latin.uix.actions.VoiceInputAction
+import org.futo.inputmethod.latin.uix.actions.VoiceInputControllable
 import org.futo.inputmethod.latin.uix.resizing.KeyboardResizers
 import org.futo.inputmethod.latin.uix.settings.DataStoreCacheProvider
 import org.futo.inputmethod.latin.uix.settings.SettingsActivity
@@ -1172,6 +1174,74 @@ class UixManager(private val latinIME: LatinIME) {
 
             onActionActivated(action)
         }
+    }
+
+    // ===== Voice Input External Control (for hardware buttons) =====
+    
+    /**
+     * Start voice input from an external trigger (e.g., hardware button).
+     * This activates the voice input action and begins recording.
+     * @return true if voice input was started successfully, false otherwise
+     */
+    fun startVoiceInputExternal(): Boolean {
+        // Don't start if already in voice input mode
+        if (currWindowAction == VoiceInputAction) {
+            return true // Already active
+        }
+        
+        // Close any existing action window first
+        if (currWindowAction != null) {
+            closeActionWindow()
+        }
+        
+        // Activate voice input
+        onActionActivated(VoiceInputAction)
+        return currWindowAction == VoiceInputAction
+    }
+    
+    /**
+     * Finish voice input and trigger transcription.
+     * Called when the hardware button is released.
+     * @return true if the action was performed, false if voice input wasn't active
+     */
+    fun finishVoiceInputExternal(): Boolean {
+        val controllable = currWindowActionWindow as? VoiceInputControllable
+        if (controllable != null) {
+            controllable.finishVoiceInput()
+            return true
+        }
+        return false
+    }
+    
+    /**
+     * Cancel voice input without transcribing.
+     * @return true if the action was performed, false if voice input wasn't active
+     */
+    fun cancelVoiceInputExternal(): Boolean {
+        val controllable = currWindowActionWindow as? VoiceInputControllable
+        if (controllable != null) {
+            controllable.cancelVoiceInput()
+            closeActionWindow()
+            return true
+        }
+        return false
+    }
+    
+    /**
+     * Check if voice input is currently active.
+     * @return true if voice input window is open and recording
+     */
+    fun isVoiceInputActive(): Boolean {
+        val controllable = currWindowActionWindow as? VoiceInputControllable
+        return controllable?.isRecording() == true
+    }
+    
+    /**
+     * Check if the keyboard is currently visible.
+     * @return true if the keyboard view is shown
+     */
+    fun isKeyboardVisible(): Boolean {
+        return composeView?.isShown == true
     }
 
     fun requestForgetWord(suggestedWordInfo: SuggestedWords.SuggestedWordInfo) {

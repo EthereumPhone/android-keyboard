@@ -118,6 +118,28 @@
             </intent-filter>
         </activity>
 
+        <!-- Voice Input Control Service for hardware button integration -->
+        <!-- This service allows system services to control voice input via AIDL -->
+        <service
+            android:name=".ipc.VoiceInputControlService"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="org.futo.inputmethod.latin.VOICE_INPUT_CONTROL"/>
+            </intent-filter>
+        </service>
+
+        <!-- Transcription Service for external apps (e.g. ethOS Launcher) -->
+        <!-- Accepts audio files via AIDL and streams Whisper transcription results -->
+        <service
+            android:name=".ipc.TranscriptionService"
+            android:exported="true"
+            android:directBootAware="true">
+            <intent-filter>
+                <action android:name="org.futo.inputmethod.latin.TRANSCRIPTION_SERVICE"/>
+            </intent-filter>
+        </service>
+
         <!-- Broadcast receivers -->
         <receiver android:name="SystemBroadcastReceiver"
              android:exported="true">

@@ -177,22 +177,26 @@ android {
         main {
             res.srcDirs = ['java/res']
             java.srcDirs = ['common/src', 'java/src']
+            aidl.srcDirs = ['java/src']
             manifest.srcFile 'java/AndroidManifest.xml'
             assets.srcDirs = ['java/assets']
         }
 
         playstore {
             java.srcDirs = ['common/src', 'java/src', 'java/playstore/java']
+            aidl.srcDirs = ['java/src']
             manifest.srcFile 'java/playstore/AndroidManifest.xml'
         }
 
         stable {
             java.srcDirs = ['common/src', 'java/src', 'java/stable/java']
+            aidl.srcDirs = ['java/src']
             manifest.srcFile 'java/stable/AndroidManifest.xml'
         }
 
         unstable {
             java.srcDirs = ['common/src', 'java/src', 'java/stable/java']
+            aidl.srcDirs = ['java/src']
             manifest.srcFile 'java/stable/AndroidManifest.xml'
             res.srcDirs = ['java/unstable/res']
         }
@@ -226,6 +230,7 @@ android {
         viewBinding true
         mlModelBinding true
         buildConfig true
+        aidl true
     }
 }
 

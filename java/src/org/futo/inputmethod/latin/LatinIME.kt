@@ -172,6 +172,18 @@ open class InputMethodServiceCompose : InputMethodService(), LifecycleOwner, Vie
 
 class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripController,
         DynamicThemeProviderOwner, FoldStateProvider, KeyboardSizeStateProvider {
+    
+    companion object {
+        /**
+         * Static reference to the current LatinIME instance.
+         * Used by VoiceInputControlService for hardware button integration.
+         */
+        @JvmStatic
+        @Volatile
+        var instance: LatinIME? = null
+            private set
+    }
+    
     val latinIMELegacy = LatinIMELegacy(
         this as InputMethodService,
         this as LatinIMELegacy.SuggestionStripController
@@ -430,6 +442,9 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Set the static instance for VoiceInputControlService
+        instance = this
 
         JniUtils.loadNativeLibrary()
 
@@ -547,6 +562,9 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
     }
 
     override fun onDestroy() {
+        // Clear the static instance
+        instance = null
+        
         unregisterReceiver(unlockReceiver)
 
         stopJobs()

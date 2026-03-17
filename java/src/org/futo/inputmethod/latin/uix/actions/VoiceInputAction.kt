@@ -55,6 +55,19 @@ import org.futo.voiceinput.shared.whisper.ModelManager
 import org.futo.voiceinput.shared.whisper.MultiModelRunConfiguration
 import java.util.Locale
 
+/**
+ * Interface for external control of voice input.
+ * Used by VoiceInputControlService to allow hardware buttons to control voice input.
+ */
+interface VoiceInputControllable {
+    /** Finish recording and trigger transcription */
+    fun finishVoiceInput()
+    /** Cancel voice input without transcribing */
+    fun cancelVoiceInput()
+    /** Check if currently recording */
+    fun isRecording(): Boolean
+}
+
 val SystemVoiceInputAction = Action(
     icon = R.drawable.mic_fill,
     name = R.string.system_voice_input_action_title,
@@ -94,10 +107,10 @@ class VoiceInputPersistentState(val manager: KeyboardManagerForAction) : Persist
     }
 }
 
-private class VoiceInputActionWindow(
+class VoiceInputActionWindow(
     val manager: KeyboardManagerForAction, val state: VoiceInputPersistentState,
     val model: ModelLoader, val locale: Locale
-) : ActionWindow, RecognizerViewListener {
+) : ActionWindow, RecognizerViewListener, VoiceInputControllable {
     val context = manager.getContext()
 
     private var shouldPlaySounds: Boolean = false
@@ -204,6 +217,19 @@ private class VoiceInputActionWindow(
     override fun close() {
         initJob.cancel()
         recognizerView.value?.cancel()
+    }
+
+    // VoiceInputControllable implementation for external control (hardware buttons)
+    override fun finishVoiceInput() {
+        recognizerView.value?.finish()
+    }
+
+    override fun cancelVoiceInput() {
+        recognizerView.value?.cancel()
+    }
+
+    override fun isRecording(): Boolean {
+        return recognizerView.value != null && !wasFinished
     }
 
     private var wasFinished = false

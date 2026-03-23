@@ -80,6 +80,7 @@ import org.futo.inputmethod.latin.uix.theme.ThemeOption
 import org.futo.inputmethod.latin.uix.theme.ThemeOptions
 import org.futo.inputmethod.latin.uix.theme.applyWindowColors
 import org.futo.inputmethod.latin.uix.theme.orDefault
+import org.futo.inputmethod.latin.terminal.TerminalKeyboardManager
 import org.futo.inputmethod.latin.uix.theme.presets.DefaultDarkScheme
 import org.futo.inputmethod.latin.utils.JniUtils
 import org.futo.inputmethod.latin.xlm.LanguageModelFacilitator
@@ -197,6 +198,9 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
     lateinit var suggestionBlacklist: SuggestionBlacklist
 
     val sizingCalculator = KeyboardSizingCalculator(this, uixManager)
+
+    var terminalManager: TerminalKeyboardManager? = null
+        private set
 
     private var activeThemeOption: ThemeOption? = null
     private var activeColorScheme = DefaultDarkScheme.obtainColors(this)
@@ -559,11 +563,31 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
         }
 
         updateAccentColor()
+
+        // Initialize terminal display manager for ethOS back-screen
+        terminalManager = try {
+            TerminalKeyboardManager(
+                context = this,
+                onVoiceInput = {
+                    uixManager.startVoiceInputExternal()
+                },
+                onDismissKeyboard = {
+                    requestHideSelf(0)
+                }
+            ).takeIf { it.isAvailable }
+        } catch (e: Exception) {
+            Log.w("LatinIME", "Terminal manager init failed: ${e.message}")
+            null
+        }
     }
 
     override fun onDestroy() {
         // Clear the static instance
         instance = null
+
+        // Clean up terminal display
+        terminalManager?.destroy()
+        terminalManager = null
         
         unregisterReceiver(unlockReceiver)
 
@@ -710,6 +734,8 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
 
         updateColorsIfDynamicChanged()
         updateAccentColor()
+
+        terminalManager?.onKeyboardShown()
     }
 
     override fun onWindowHidden() {
@@ -717,6 +743,8 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
         latinIMELegacy.onWindowHidden()
 
         uixManager.onInputFinishing()
+
+        terminalManager?.onKeyboardHidden()
     }
 
     override fun onUpdateSelection(

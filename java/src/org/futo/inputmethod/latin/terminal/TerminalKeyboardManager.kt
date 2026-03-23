@@ -45,6 +45,7 @@ class TerminalKeyboardManager(
     private var display: TerminalDisplay? = null
     private var monitorJob: Job? = null
     private var isKeyboardVisible = false
+    private var ownsTerminal = false
     private val scope = CoroutineScope(Dispatchers.Main)
 
     init {
@@ -60,29 +61,42 @@ class TerminalKeyboardManager(
 
     /**
      * Called when the keyboard window becomes visible.
-     * Displays voice/dismiss controls on the terminal and starts monitoring.
+     * Only displays voice/dismiss controls if the terminal is currently showing
+     * ID_STATUSBAR (i.e. no other app is using it). Starts monitoring regardless
+     * so we can take over once the terminal becomes free.
      */
     fun onKeyboardShown() {
         isKeyboardVisible = true
         val d = display ?: return
 
         scope.launch {
-            showKeyboardControls(d)
+            val currentId = d.getCurrentContentId()
+            if (currentId == d.ID_STATUSBAR) {
+                showKeyboardControls(d)
+            } else {
+                Log.d(TAG, "Keyboard shown but terminal in use (id=$currentId), waiting")
+            }
             startMonitoring()
         }
     }
 
     /**
      * Called when the keyboard window is hidden.
-     * Restores the terminal to ID_STATUSBAR and stops monitoring.
+     * Only restores ID_STATUSBAR if we currently own the terminal.
+     * If another app is displaying content, leave it alone.
      */
     fun onKeyboardHidden() {
         isKeyboardVisible = false
         stopMonitoring()
 
         val d = display ?: return
-        scope.launch {
-            d.finish()
+        if (ownsTerminal) {
+            ownsTerminal = false
+            scope.launch {
+                d.finish()
+            }
+        } else {
+            d.clearTouchHandler()
         }
     }
 
@@ -91,6 +105,7 @@ class TerminalKeyboardManager(
      */
     fun destroy() {
         isKeyboardVisible = false
+        ownsTerminal = false
         stopMonitoring()
         display?.destroyTouchHandlerSync()
     }
@@ -116,8 +131,9 @@ class TerminalKeyboardManager(
             }
         )
 
-        Log.d(TAG, "showKeyboardControls: refreshed=$refreshed, registered=$registered")
-        return refreshed && registered
+        ownsTerminal = refreshed && registered
+        Log.d(TAG, "showKeyboardControls: refreshed=$refreshed, registered=$registered, owns=$ownsTerminal")
+        return ownsTerminal
     }
 
     /**
@@ -145,12 +161,16 @@ class TerminalKeyboardManager(
                         // Re-apply our controls (bitmap + touch handler).
                         Log.d(TAG, "ID_STATUSBAR detected, re-applying keyboard controls")
                         showKeyboardControls(d)
-                    } else if (d.touchHandler != null) {
-                        // Another app is using the terminal — clear our local handler
-                        // reference so taps on their content don't trigger our actions.
-                        // This only affects our own handler; other apps' handlers live
-                        // in their own process and are not touched.
+                    } else if (!ownsTerminal && d.touchHandler != null) {
+                        // Another app took over the terminal — clear our local handler
+                        // so taps on their content don't trigger our actions.
                         Log.d(TAG, "Terminal in use by another app (id=$currentId), clearing our touch handler")
+                        d.clearTouchHandler()
+                    } else if (ownsTerminal && currentId != d.ID_PERSISTENT) {
+                        // We thought we owned it but something else is showing —
+                        // another app took over without us noticing.
+                        Log.d(TAG, "Lost terminal ownership (id=$currentId)")
+                        ownsTerminal = false
                         d.clearTouchHandler()
                     }
                 } catch (e: Exception) {

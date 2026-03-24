@@ -1,9 +1,11 @@
 package org.futo.inputmethod.latin.terminal
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.PorterDuff
+import android.graphics.drawable.Drawable
 import android.provider.Settings
 import android.util.Log
 import android.view.LayoutInflater
@@ -18,16 +20,20 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.futo.inputmethod.latin.R
+import org.futo.inputmethod.latin.uix.getSettingBlocking
+import org.futo.inputmethod.latin.uix.setSettingBlocking
+import org.futo.inputmethod.latin.uix.settings.SettingsActivity
+import org.futo.inputmethod.latin.uix.settings.pages.ActionBarDisplayedSetting
 
 /**
  * Manages the ethOS terminal (back-screen) display for the keyboard IME.
  *
- * When the keyboard is visible and the terminal is available, shows two touch buttons:
- * - VOICE: starts voice-to-text dictation
- * - DISMISS: hides the keyboard
+ * Displays swipeable pages of controls on the 428x142 back-screen.
+ * Swipe left/right to switch pages, tap left/right half to activate buttons.
  *
- * Monitors for other apps taking over the terminal and re-applies the keyboard
- * controls once the terminal returns to ID_STATUSBAR.
+ * Pages:
+ * - Page 0: VOICE / DISMISS
+ * - Page 1: SETTINGS / SUGGEST (toggle prediction)
  */
 class TerminalKeyboardManager(
     private val context: Context,
@@ -40,12 +46,16 @@ class TerminalKeyboardManager(
         private const val DISPLAY_HEIGHT = 142
         private const val SPLIT_X = 214f
         private const val MONITOR_INTERVAL_MS = 2000L
+        private const val SWIPE_THRESHOLD = 50f
+        private const val PAGE_COUNT = 2
     }
 
     private var display: TerminalDisplay? = null
     private var monitorJob: Job? = null
     private var isKeyboardVisible = false
     private var ownsTerminal = false
+    private var currentPage = 0
+    private var touchDownX = 0f
     private val scope = CoroutineScope(Dispatchers.Main)
 
     init {
@@ -61,18 +71,18 @@ class TerminalKeyboardManager(
 
     /**
      * Called when the keyboard window becomes visible.
-     * Only displays voice/dismiss controls if the terminal is currently showing
-     * ID_STATUSBAR (i.e. no other app is using it). Starts monitoring regardless
-     * so we can take over once the terminal becomes free.
+     * Only displays controls if the terminal is currently showing
+     * ID_STATUSBAR (i.e. no other app is using it).
      */
     fun onKeyboardShown() {
         isKeyboardVisible = true
+        currentPage = 0
         val d = display ?: return
 
         scope.launch {
             val currentId = d.getCurrentContentId()
             if (currentId == d.ID_STATUSBAR) {
-                showKeyboardControls(d)
+                showCurrentPage(d)
             } else {
                 Log.d(TAG, "Keyboard shown but terminal in use (id=$currentId), waiting")
             }
@@ -83,7 +93,6 @@ class TerminalKeyboardManager(
     /**
      * Called when the keyboard window is hidden.
      * Only restores ID_STATUSBAR if we currently own the terminal.
-     * If another app is displaying content, leave it alone.
      */
     fun onKeyboardHidden() {
         isKeyboardVisible = false
@@ -100,9 +109,6 @@ class TerminalKeyboardManager(
         }
     }
 
-    /**
-     * Releases all resources. Call from the IME's onDestroy.
-     */
     fun destroy() {
         isKeyboardVisible = false
         ownsTerminal = false
@@ -110,40 +116,85 @@ class TerminalKeyboardManager(
         display?.destroyTouchHandlerSync()
     }
 
-    /**
-     * Pushes the keyboard controls bitmap and registers the touch handler.
-     * Returns true if both the display refresh and touch registration succeeded.
-     */
-    private suspend fun showKeyboardControls(d: TerminalDisplay): Boolean {
+    // -- Page rendering and touch handling --
+
+    private suspend fun showCurrentPage(d: TerminalDisplay): Boolean {
         d.destroyTouchHandler()
 
-        val bitmap = renderControlsBitmap()
+        val bitmap = renderPage(currentPage)
         val refreshed = d.refresh(bitmap, d.ID_PERSISTENT)
 
         val registered = d.registerTouchListener(
             MiniDisplayTouchHandler.OnTouchListener { x, _, action ->
-                if (action != MotionEvent.ACTION_DOWN) return@OnTouchListener
-                if (x < SPLIT_X) {
-                    onVoiceInput()
-                } else {
-                    onDismissKeyboard()
+                when (action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        touchDownX = x
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        val deltaX = x - touchDownX
+                        when {
+                            deltaX < -SWIPE_THRESHOLD -> swipePage(1)   // swipe left → next
+                            deltaX > SWIPE_THRESHOLD -> swipePage(-1)  // swipe right → prev
+                            else -> onPageTap(currentPage, x)          // tap
+                        }
+                    }
                 }
             }
         )
 
         ownsTerminal = refreshed && registered
-        Log.d(TAG, "showKeyboardControls: refreshed=$refreshed, registered=$registered, owns=$ownsTerminal")
+        Log.d(TAG, "showPage($currentPage): refreshed=$refreshed, registered=$registered")
         return ownsTerminal
     }
 
-    /**
-     * Polls the terminal state every [MONITOR_INTERVAL_MS] ms.
-     *
-     * Queries [TerminalDisplay.getCurrentContentId] to check what is currently
-     * being shown on the back-screen.  Only re-applies our controls when
-     * ID_STATUSBAR is the active layer — this means no other app is using the
-     * terminal and it is safe to take over again.
-     */
+    private fun swipePage(direction: Int) {
+        val newPage = (currentPage + direction).coerceIn(0, PAGE_COUNT - 1)
+        if (newPage == currentPage) return
+        currentPage = newPage
+        val d = display ?: return
+        scope.launch { showCurrentPage(d) }
+    }
+
+    private fun onPageTap(page: Int, x: Float) {
+        val isLeft = x < SPLIT_X
+        when (page) {
+            0 -> if (isLeft) onVoiceInput() else onDismissKeyboard()
+            1 -> if (isLeft) openSettings() else toggleSuggestions()
+        }
+    }
+
+    private fun openSettings() {
+        try {
+            val intent = Intent(context, SettingsActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED or
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to open settings", e)
+        }
+    }
+
+    private fun toggleSuggestions() {
+        try {
+            val current = context.getSettingBlocking(ActionBarDisplayedSetting)
+            context.setSettingBlocking(ActionBarDisplayedSetting.key, !current)
+            Log.d(TAG, "Action bar toggled: ${!current}")
+
+            // Re-render the page to reflect the new state
+            val d = display ?: return
+            scope.launch {
+                val bitmap = renderPage(currentPage)
+                d.refresh(bitmap, d.ID_PERSISTENT)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to toggle suggestions", e)
+        }
+    }
+
+    // -- Monitoring --
+
     private fun startMonitoring() {
         stopMonitoring()
         monitorJob = scope.launch {
@@ -157,18 +208,12 @@ class TerminalKeyboardManager(
                 try {
                     val currentId = d.getCurrentContentId()
                     if (currentId == d.ID_STATUSBAR) {
-                        // Terminal is showing the status bar — no other app is using it.
-                        // Re-apply our controls (bitmap + touch handler).
                         Log.d(TAG, "ID_STATUSBAR detected, re-applying keyboard controls")
-                        showKeyboardControls(d)
+                        showCurrentPage(d)
                     } else if (!ownsTerminal && d.touchHandler != null) {
-                        // Another app took over the terminal — clear our local handler
-                        // so taps on their content don't trigger our actions.
                         Log.d(TAG, "Terminal in use by another app (id=$currentId), clearing our touch handler")
                         d.clearTouchHandler()
                     } else if (ownsTerminal && currentId != d.ID_PERSISTENT) {
-                        // We thought we owned it but something else is showing —
-                        // another app took over without us noticing.
                         Log.d(TAG, "Lost terminal ownership (id=$currentId)")
                         ownsTerminal = false
                         d.clearTouchHandler()
@@ -185,31 +230,82 @@ class TerminalKeyboardManager(
         monitorJob = null
     }
 
-    private fun renderControlsBitmap(): Bitmap {
-        val inflater = LayoutInflater.from(context)
-        val view = inflater.inflate(R.layout.terminal_keyboard_controls, null)
+    // -- Rendering --
 
+    private fun renderPage(page: Int): Bitmap {
+        return when (page) {
+            0 -> renderPage0()
+            1 -> renderPage1()
+            else -> renderPage0()
+        }
+    }
+
+    /** Page 0: VOICE / DISMISS */
+    private fun renderPage0(): Bitmap {
+        val view = LayoutInflater.from(context)
+            .inflate(R.layout.terminal_keyboard_controls, null)
         val accent = getAccentColor()
 
-        // Tint icons
         view.findViewById<ImageView>(R.id.voice_icon)?.setColorFilter(accent, PorterDuff.Mode.SRC_IN)
         view.findViewById<ImageView>(R.id.dismiss_icon)?.setColorFilter(accent, PorterDuff.Mode.SRC_IN)
-
-        // Color labels
         view.findViewById<TextView>(R.id.voice_label)?.setTextColor(accent)
         view.findViewById<TextView>(R.id.dismiss_label)?.setTextColor(accent)
 
-        // Measure and layout
+        return viewToBitmap(view, 0)
+    }
+
+    /** Page 1: OPTIONS / TOOLBAR (filled icon = on, outlined = off) */
+    private fun renderPage1(): Bitmap {
+        val view = LayoutInflater.from(context)
+            .inflate(R.layout.terminal_keyboard_page_settings, null)
+        val accent = getAccentColor()
+
+        view.findViewById<ImageView>(R.id.settings_icon)?.setColorFilter(accent, PorterDuff.Mode.SRC_IN)
+        view.findViewById<TextView>(R.id.settings_label)?.setTextColor(accent)
+        view.findViewById<TextView>(R.id.toolbar_label)?.setTextColor(accent)
+
+        val toolbarIcon = view.findViewById<ImageView>(R.id.toolbar_icon)
+        val actionBarOn = context.getSettingBlocking(ActionBarDisplayedSetting)
+        toolbarIcon?.setImageResource(
+            if (actionBarOn) R.drawable.terminal_toolbar_on_icon
+            else R.drawable.terminal_toolbar_off_icon
+        )
+        toolbarIcon?.setColorFilter(accent, PorterDuff.Mode.SRC_IN)
+
+        return viewToBitmap(view, 1)
+    }
+
+    private fun viewToBitmap(view: View, page: Int): Bitmap {
         val wSpec = View.MeasureSpec.makeMeasureSpec(DISPLAY_WIDTH, View.MeasureSpec.EXACTLY)
         val hSpec = View.MeasureSpec.makeMeasureSpec(DISPLAY_HEIGHT, View.MeasureSpec.EXACTLY)
         view.measure(wSpec, hSpec)
         view.layout(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT)
 
-        // Render to bitmap
         val bitmap = Bitmap.createBitmap(DISPLAY_WIDTH, DISPLAY_HEIGHT, Bitmap.Config.RGB_565)
         val canvas = Canvas(bitmap)
         view.draw(canvas)
+
+        val accent = getAccentColor()
+        val arrowSize = 14  // px
+        val margin = 6      // px from edge
+        val yCenter = (DISPLAY_HEIGHT - arrowSize) / 2
+
+        if (page > 0) {
+            drawArrow(canvas, R.drawable.terminal_arrow_left, margin, yCenter, arrowSize, accent)
+        }
+        if (page < PAGE_COUNT - 1) {
+            drawArrow(canvas, R.drawable.terminal_arrow_right,
+                DISPLAY_WIDTH - margin - arrowSize, yCenter, arrowSize, accent)
+        }
+
         return bitmap
+    }
+
+    private fun drawArrow(canvas: Canvas, drawableRes: Int, x: Int, y: Int, size: Int, color: Int) {
+        val drawable: Drawable = context.resources.getDrawable(drawableRes, null) ?: return
+        drawable.setBounds(x, y, x + size, y + size)
+        drawable.setTint(color)
+        drawable.draw(canvas)
     }
 
     private fun getAccentColor(): Int {
@@ -218,7 +314,6 @@ class TerminalKeyboardManager(
             "systemui_accent_color",
             0xFFFE0000.toInt()
         )
-        // Special-case: LAZER theme returns pure red
         return if (accentColor == -131072) 0xFFFF0000.toInt() else accentColor
     }
 }

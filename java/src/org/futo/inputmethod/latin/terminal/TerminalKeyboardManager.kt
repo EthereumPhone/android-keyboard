@@ -19,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import org.futo.inputmethod.latin.AudioAndHapticFeedbackManager
 import org.futo.inputmethod.latin.R
 import org.futo.inputmethod.latin.uix.getSettingBlocking
 import org.futo.inputmethod.latin.uix.setSettingBlocking
@@ -38,7 +39,8 @@ import org.futo.inputmethod.latin.uix.settings.pages.ActionBarDisplayedSetting
 class TerminalKeyboardManager(
     private val context: Context,
     private val onVoiceInput: () -> Unit,
-    private val onDismissKeyboard: () -> Unit
+    private val onDismissKeyboard: () -> Unit,
+    private val getHapticView: () -> View? = { null }
 ) {
     companion object {
         private const val TAG = "TerminalKeyboardMgr"
@@ -151,16 +153,22 @@ class TerminalKeyboardManager(
         val newPage = (currentPage + direction).coerceIn(0, PAGE_COUNT - 1)
         if (newPage == currentPage) return
         currentPage = newPage
+        performHapticFeedback()
         val d = display ?: return
         scope.launch { showCurrentPage(d) }
     }
 
     private fun onPageTap(page: Int, x: Float) {
+        performHapticFeedback()
         val isLeft = x < SPLIT_X
         when (page) {
             0 -> if (isLeft) onVoiceInput() else onDismissKeyboard()
             1 -> if (isLeft) openSettings() else toggleSuggestions()
         }
+    }
+
+    private fun performHapticFeedback() {
+        AudioAndHapticFeedbackManager.getInstance().performHapticFeedback(getHapticView(), false)
     }
 
     private fun openSettings() {

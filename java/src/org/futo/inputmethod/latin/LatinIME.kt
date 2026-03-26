@@ -573,6 +573,9 @@ class LatinIME : InputMethodServiceCompose(), LatinIMELegacy.SuggestionStripCont
                 },
                 onDismissKeyboard = {
                     requestHideSelf(0)
+                },
+                getHapticView = {
+                    latinIMELegacy.mKeyboardSwitcher.getMainKeyboardView()
                 }
             ).takeIf { it.isAvailable }
         } catch (e: Exception) {
